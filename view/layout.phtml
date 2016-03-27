@@ -1,0 +1,194 @@
+<html>
+    <head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Полигон</title>
+		<meta content="width=device-width, initial-scale=1.0" name="viewport">
+		<meta name="description" content="Найти расстояние между точками" />
+		<link type="text/css" href="css/bootstrap.min.css" rel="stylesheet">
+		<link type="text/css" href="css/bootstrap-theme.min.css" rel="stylesheet">
+		<script src="js/jquery.min.js" type="text/javascript"></script>
+		<script src="js/bootstrap.min.js" type="text/javascript"></script>		
+	</head>
+    <body onLoad="draw(<?php echo htmlentities($this->points); ?>)">
+		<div class="container">
+			<canvas width="600" height="400" id="canvas"></canvas>
+			<span id="first" x="" y="" hide="true"></span>
+			<span id="second" x="" y="" hide="true"></span>
+			<h2 id="dist">Distance:</span> 
+    	</div>
+    </body>
+</html>
+    <script type="text/javascript">
+		function draw(points) {
+			var canvas = document.getElementById('canvas');
+			if (canvas.getContext) {
+				var ctx = canvas.getContext('2d');
+
+				// draw points
+			  	for (var p = 0; p < points.length; p++) { 
+					ctx.beginPath();
+					ctx.arc(points[p].x, points[p].y, 10, 0, 2 * Math.PI, false);
+					ctx.fill();
+			  	}
+			  	// draw edges
+				ctx.beginPath();
+				ctx.moveTo(points[0].x, points[0].y);
+				for (var p = 1; p < points.length; p++) { 
+					ctx.lineTo(points[p].x, points[p].y);
+				}	      
+				ctx.lineTo(points[0].x, points[0].y);
+				ctx.strokeStyle = "#000";
+				ctx.stroke();
+
+			}
+      	}
+
+      	function firstHit(ctx, x, y) {
+      		hit = 0;
+			if ($('#first').attr('x') == '' && $('#first').attr('y') == '') {
+				$('#first').attr('x', x);
+				$('#first').attr('y', y);
+				ctx.fillStyle = "#f00";
+				hit = 1;
+			}
+			else if ($('#first').attr('x') == x && $('#first').attr('y') == y) { 
+				if ($('#second').attr('x') != '' && $('#second').attr('y') != '') {
+					$('#first').attr('x', $('#second').attr('x'));
+					$('#first').attr('y', $('#second').attr('y'));
+					$('#second').attr('x', '');
+					$('#second').attr('y', '');
+				}
+				else {
+					$('#first').attr('x', '');
+					$('#first').attr('y', '');
+				}
+				ctx.fillStyle = "#000";
+				hit = 1;
+			}
+			if (hit == 1) { // fill black, do not calculate
+				ctx.beginPath();
+				ctx.arc(x, y, 10, 0, 2 * Math.PI, false);
+				ctx.fill();
+			}
+			return hit;
+      	}
+
+      	function secondHit(ctx, x, y) {
+      		hit = 0;
+			if ($('#second').attr('x') == x && $('#second').attr('y') == y) { // fill black, do not calculate
+				$('#second').attr('x', '');
+				$('#second').attr('y', '');
+				ctx.fillStyle = "#000";
+				ctx.beginPath();
+				ctx.arc(x, y, 10, 0, 2 * Math.PI, false);
+				ctx.fill();
+				hit = 1;
+			}
+			return hit;      		
+      	}
+
+      	function onlyTwo(ctx, x, y) {
+      		var calc = 0;
+      		if (firstHit(ctx, x, y) == 1)
+      			return calc;
+      		if (secondHit(ctx, x, y) == 1)
+      			return calc;
+      		
+			if ($('#second').attr('x') == '' && $('#second').attr('y') == '') {
+				$('#second').attr('x', x);
+				$('#second').attr('y', y);
+				calc = 1; // calculate
+			}
+			else { // two points are marked - reset
+				ctx.beginPath();
+				ctx.arc($('#first').attr('x'), $('#first').attr('y'), 10, 0, 2 * Math.PI, false);
+				ctx.fillStyle = "#000";
+				ctx.fill();
+				
+				ctx.arc($('#second').attr('x'), $('#second').attr('y'), 10, 0, 2 * Math.PI, false);
+				ctx.fillStyle = "#000";
+				ctx.fill();
+
+				$('#first').attr('x', x);
+				$('#first').attr('y', y);
+				
+				$('#second').attr('x', '');
+				$('#second').attr('y', '');
+				
+			}
+			// fill red
+			ctx.beginPath();
+			ctx.arc(x, y, 10, 0, 2 * Math.PI, false);
+			ctx.fillStyle = "#f00";
+			ctx.fill();
+			return calc;
+      	}
+		
+		function calculate(ctx) {
+			var url = 'index.php';
+			$.ajax({
+				url: url,
+				async: false,
+				type: 'POST',
+				dataType: "json",
+				data: {
+					action: 'action_calculate',
+					x1 : $('#first').attr('x'),
+					y1 : $('#first').attr('y'),
+					x2 : $('#second').attr('x'),
+					y2 : $('#second').attr('y'),
+				}, 
+				success: function(d)
+				{
+					var str = $('#dist').text();
+					$('#dist').text("Distance:" + Math.round(d[0].distance));
+				},
+				error: function(XMLHttpRequest, textStatus, errorThrown)
+				{
+					alert(textStatus);
+				}
+			});
+				
+		}
+		
+		$(document).ready(function() {
+			$("canvas").click(function(e){
+				var x = Math.round(e.pageX - $(this).offset().left);
+				var y = Math.round(e.pageY - $(this).offset().top);
+				var url = 'index.php';
+				$.ajax({
+	            	url: url,
+	            	async: false,
+	            	type: 'POST',
+	            	dataType: "json",
+	            	data: {
+	            		action: 'action_check',
+	            		x : x,
+	            		y : y
+	            	}, 
+		            success: function(d)
+	    	        {
+	    	        	if (d[0].in == 1) {
+							var canvas = document.getElementById('canvas');
+							if (canvas.getContext){
+								var ctx = canvas.getContext('2d');
+						
+								if (onlyTwo(ctx, d[0].x, d[0].y) == 1) {
+									calculate(ctx);
+								}
+								else {
+									$('#dist').text("Distance:");
+								}
+							}
+						}
+		                
+	    	        },
+		            error: function(XMLHttpRequest, textStatus, errorThrown)
+		            {
+		            	alert(textStatus);
+		            }
+		        });
+				        
+			});
+      	});
+    </script>
