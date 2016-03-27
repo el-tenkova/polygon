@@ -3,7 +3,7 @@
 namespace Polygon\Controller;
 
 use Polygon\Model\Polygon;
-use Polygon\Model\Point;
+//use Polygon\Model\Point;
 
 class PolygonController
 {
@@ -41,9 +41,9 @@ class PolygonController
 		error_log("PolygonController: action_calculate");
 		$res = array();
 		if (isset($_POST['x1']) && isset($_POST['y1']) && isset($_POST['x2']) && isset($_POST['y1'])) {
-			$pt1 = new Point($_POST['x1'], $_POST['y1']);
-			$pt2 = new Point($_POST['x2'], $_POST['y2']);
-			$d = $this->model->distance($pt1, $pt2);
+			$idx1 = $this->model->findPt($_POST['x1'], $_POST['y1']);
+			$idx2 = $this->model->findPt($_POST['x2'], $_POST['y2']);
+			$d = $this->model->distance($idx1, $idx2);
 			error_log(sprintf("distance = %d", $d));
 			$res = json_encode(array('distance' => $d));
 		}

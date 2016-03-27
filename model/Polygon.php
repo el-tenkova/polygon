@@ -48,8 +48,29 @@ class Polygon
 		return array();
 	}
 	
-	public function distance($pt1, $pt2)
+	public function findPt($x, $y)
 	{
+		foreach ($this->points as $index => $point) {
+			if ($point->getX() == $x && $point->getY() == $y)
+				return $index;
+		}
+		return false;
+	}
+	
+	public function distance($idx1, $idx2)
+	{
+		if ($idx1 === false || $idx2 === false)
+			return 0;
+			
+		if ($idx1 < 0 || $idx1 > count($this->points))
+			return 0;
+
+		if ($idx2 < 0 || $idx2 > count($this->points))
+			return 0;
+			
+		$pt1 = $this->points[$idx1];
+		$pt2 = $this->points[$idx2];
+		
 		return $pt1->distance($pt2);
 	}
 
