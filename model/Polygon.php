@@ -7,6 +7,7 @@ use Polygon\Model\Point;
 class Polygon
 {
 	protected $points = array();
+	protected $perimeter;
 
 	function __construct()
 	{
@@ -19,6 +20,7 @@ class Polygon
 		$this->points[6] = new Point(220, 300);
 		$this->points[7] = new Point(70, 300);
 		
+		$this->perimeter = $this->calcPerimeter();
 	}
 
 	public function getPoints()
@@ -31,6 +33,11 @@ class Polygon
 		return ('['.implode(',', $res).']');
 	}
 
+	public function getPerimeter()
+	{
+		return $this->perimeter;
+	}
+		
 	public function checkPt($x, $y)
 	{
 		$pt = new Point($x, $y);
@@ -44,6 +51,23 @@ class Polygon
 	public function distance($pt1, $pt2)
 	{
 		return $pt1->distance($pt2);
+	}
+
+	/// helpers
+	private function calcPerimeter()
+	{
+		$res = 0;
+		$prev = false;
+		foreach ($this->points as $index => $point) {
+			if ($prev != false) {
+				$res += $prev->distance($point);
+			}
+			else {
+				$prev = $point;
+			}
+		}		
+		$res += $this->points[1]->distance($this->points[count($this->points)]);
+		return intval($res);
 	}
 
 }

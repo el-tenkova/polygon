@@ -17,7 +17,7 @@ class PolygonController
 	function action_index()
 	{
 		error_log("PolygonController: action_index");
-		return array("points" => $this->model->getPoints());
+		return array("points" => $this->model->getPoints(), "perimeter" => $this->model->getPerimeter());
 	}
 	
 	function action_check()
