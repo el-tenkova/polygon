@@ -3,7 +3,6 @@
 namespace Polygon\Controller;
 
 use Polygon\Model\Polygon;
-//use Polygon\Model\Point;
 
 class PolygonController
 {
